@@ -31,6 +31,11 @@ try:
 except ImportError:
     Computed = None
 
+try:
+    from sqlalchemy import Identity
+except ImportError:
+    Identity = None
+
 # Conditionally import Geoalchemy2 to enable reflection support
 try:
     import geoalchemy2  # noqa: F401
@@ -596,6 +601,8 @@ class CodeGenerator(object):
                 persist_arg = ', persisted={}'.format(column.server_default.persisted)
 
             server_default = 'Computed({!r}{})'.format(expression, persist_arg)
+        elif Identity and isinstance(column.server_default, Identity):
+            server_default = 'Identity(start={!r})'.format(column.server_default.start)
         elif column.server_default:
             # The quote escaping does not cover pathological cases but should mostly work
             default_expr = self._get_compiled_expression(column.server_default.arg)
